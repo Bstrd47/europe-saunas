@@ -12,7 +12,7 @@
   <main class="app">
     <header class="hero">
       <div>
-        <p class="eyebrow">Zero-cost beta · source-backed listings</p>
+      <p class="eyebrow">Version 1.0 audit · source-backed listings</p>
         <h1>European gay sauna directory</h1>
         <p class="lede">Explore checked venue details, opening times and typical prices. Always confirm with the venue before travelling.</p>
       </div>
@@ -83,7 +83,7 @@
       <dl><div><dt>Opening hours</dt><dd>${esc(v.hours)}</dd></div><div><dt>Typical admission</dt><dd>${esc(v.price)}</dd></div><div><dt>Access</dt><dd>${esc(v.audience)}</dd></div></dl>
       <div class="chips">${v.features.map(f=>`<span>${esc(f)}</span>`).join("")}</div>
       <p class="note">${esc(v.note)} Holiday hours can differ.</p>
-      <p class="checked">Checked ${esc(v.verifiedAt)} · ${esc(v.status)}</p>
+      <p class="checked"><strong>Data audit:</strong> ${esc(v.auditStatus)} · checked ${esc(v.verifiedAt)} · coordinates remain an ${esc(v.coordinateStatus)}</p>
       <div class="actions"><a class="primary" href="${esc(v.website)}" target="_blank" rel="noopener">Venue website</a><a href="${mapsUrl(v)}" target="_blank" rel="noopener">Google Maps & reviews</a><a href="${esc(v.source)}" target="_blank" rel="noopener">Fact source</a><button id="copy-correction" type="button">Suggest correction</button></div>`;
       detail.querySelector("#copy-correction").addEventListener("click",e=>copyCorrection(v,e.currentTarget));render();
     }
