@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>European Gay Sauna Directory - Beta</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="venues.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Zero-cost beta · source-backed listings</p>
+        <h1>European gay sauna directory</h1>
+        <p class="lede">Explore checked venue details, opening times and typical prices. Always confirm with the venue before travelling.</p>
+      </div>
+      <div class="stats" aria-label="Directory summary">
+        <div><strong id="stat-venues">-</strong><span>venues</span></div>
+        <div><strong id="stat-cities">-</strong><span>cities</span></div>
+        <div><strong id="stat-countries">-</strong><span>countries</span></div>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Map filters">
+      <label>Search<input id="search" type="search" placeholder="Venue, city, country"></label>
+      <label>Country<select id="country"><option value="all">All countries</option></select></label>
+      <label>Facility<select id="facility"><option value="all">All facilities</option></select></label>
+      <label class="check"><input id="open" type="checkbox"> Open now</label>
+      <label class="check"><input id="fresh" type="checkbox"> Checked recently</label>
+      <button id="reset" type="button">Reset</button>
+    </section>
+
+    <section class="layout">
+      <div class="map-card">
+        <div class="map-head"><span id="status">Loading map...</span><button id="back" hidden type="button">Back to Europe</button></div>
+        <svg id="map" viewBox="0 0 900 540" role="img" aria-label="Interactive map of venue clusters"><g class="countries"></g><g class="markers"></g></svg>
+        <p class="attribution">Country boundaries: Natural Earth via D3 Atlas. Listing coordinates are approximate address points.</p>
+      </div>
+
+      <aside class="side">
+        <label>Quick select<select id="venue"><option value="">Choose a listing</option></select></label>
+        <article id="detail" class="detail empty">
+          <h2>Select a city or venue</h2>
+          <p>Choose a cluster on the map, use Quick select, or narrow the directory with filters.</p>
+        </article>
+      </aside>
+    </section>
+
+    <footer>
+      <p><strong>Data policy:</strong> <span id="data-policy"></span></p>
+      <p>Google Maps ratings are opened live instead of stored. This avoids stale copied ratings and keeps the prototype free.</p>
+    </footer>
+  </main>
+
+  <script type="module">
+    import { geoMercator, geoPath } from "https://esm.sh/d3-geo@3.1.1";
+    import { feature } from "https://esm.sh/topojson-client@3.1.0";
+    import world from "https://esm.sh/@d3-maps/atlas@1.0.0/world/countries/countries-110m";
+
+    const data=window.SAUNA_DATA, venues=data.venues, $=id=>document.getElementById(id), NS="http://www.w3.org/2000/svg";
+    const svg=$("map"), countriesLayer=svg.querySelector(".countries"), markersLayer=svg.querySelector(".markers");
+    const search=$("search"), country=$("country"), facility=$("facility"), openOnly=$("open"), fresh=$("fresh"), venueSelect=$("venue"), detail=$("detail"), status=$("status"), back=$("back");
+    const countries=feature(world,world.objects.features).features, dayIndex={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+    let selectedCity=null, selectedVenue=null;
+
+    function E(name,attrs={}){const n=document.createElementNS(NS,name);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);return n}
+    function esc(value){return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+    function isOpen(v){
+      if(!Array.isArray(v.schedule)||v.schedule.length!==7)return null;
+      try{const p=new Intl.DateTimeFormat("en-US",{timeZone:v.timezone,weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date()),g=t=>p.find(x=>x.type===t)?.value,d=dayIndex[g("weekday")],h=+g("hour")+(+g("minute")/60),today=v.schedule[d]||[],prev=v.schedule[(d+6)%7]||[];return today.some(([s,e])=>h>=s&&h<Math.min(e,24))||prev.some(([s,e])=>e>24&&h+24>=s&&h+24<e)}catch{return null}
+    }
+    function ageDays(date){return (Date.now()-new Date(date+"T00:00:00Z"))/86400000}
+    function filtered(){const q=search.value.trim().toLowerCase();return venues.filter(v=>(country.value==="all"||v.country===country.value)&&(facility.value==="all"||v.features.includes(facility.value))&&(!openOnly.checked||isOpen(v)===true)&&(!fresh.checked||ageDays(v.verifiedAt)<=120)&&(!q||`${v.name} ${v.city} ${v.country} ${v.address}`.toLowerCase().includes(q)))}
+    function projection(items){if(selectedCity){const s=venues.filter(v=>v.city===selectedCity),lon=s.reduce((n,v)=>n+v.lon,0)/s.length,lat=s.reduce((n,v)=>n+v.lat,0)/s.length;return geoMercator().center([lon,lat]).scale(s.length>3?150000:115000).translate([450,270])}return geoMercator().center([8,51]).scale(650).translate([450,270])}
+    function drawCountries(p,items){countriesLayer.replaceChildren();const path=geoPath(p),focus=new Set(items.map(v=>v.code));for(const f of countries)countriesLayer.appendChild(E("path",{d:path(f)||"",class:`country${focus.has(f.properties.id)?" focus":""}`}))}
+    function mapsUrl(v){return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.name+" "+v.address)}`}
+    function correctionText(v){return `Correction for ${v.name}\nField to correct: \nSuggested value: \nSource URL: \nChecked on: `}
+    async function copyCorrection(v,button){try{await navigator.clipboard.writeText(correctionText(v));button.textContent="Correction template copied"}catch{prompt("Copy this correction template:",correctionText(v))}}
+    function showDetail(v){selectedVenue=v.id;selectedCity=v.city;const live=isOpen(v),liveLabel=live===null?"Schedule not structured":live?"Open now":"Closed now";detail.className="detail";detail.innerHTML=`
+      <div class="detail-top"><div><p class="eyebrow">${esc(v.city)}, ${esc(v.country)}</p><h2>${esc(v.name)}</h2><p class="address">${esc(v.address)}</p></div><span class="state ${live===true?"on":""}">${esc(liveLabel)}</span></div>
+      <dl><div><dt>Opening hours</dt><dd>${esc(v.hours)}</dd></div><div><dt>Typical admission</dt><dd>${esc(v.price)}</dd></div><div><dt>Access</dt><dd>${esc(v.audience)}</dd></div></dl>
+      <div class="chips">${v.features.map(f=>`<span>${esc(f)}</span>`).join("")}</div>
+      <p class="note">${esc(v.note)} Holiday hours can differ.</p>
+      <p class="checked">Checked ${esc(v.verifiedAt)} · ${esc(v.status)}</p>
+      <div class="actions"><a class="primary" href="${esc(v.website)}" target="_blank" rel="noopener">Venue website</a><a href="${mapsUrl(v)}" target="_blank" rel="noopener">Google Maps & reviews</a><a href="${esc(v.source)}" target="_blank" rel="noopener">Fact source</a><button id="copy-correction" type="button">Suggest correction</button></div>`;
+      detail.querySelector("#copy-correction").addEventListener("click",e=>copyCorrection(v,e.currentTarget));render();
+    }
+    function render(){
+      const items=filtered(), choice=selectedVenue||"";venueSelect.replaceChildren(new Option(items.length?"Choose a listing":"No matches",""));
+      for(const v of items.slice().sort((a,b)=>`${a.city}${a.name}`.localeCompare(`${b.city}${b.name}`)))venueSelect.add(new Option(`${v.city} - ${v.name}`,v.id));venueSelect.value=items.some(v=>v.id===choice)?choice:"";
+      if(selectedCity&&!items.some(v=>v.city===selectedCity)){selectedCity=selectedVenue=null}
+      const p=projection(items);drawCountries(p,items);markersLayer.replaceChildren();back.hidden=!selectedCity;
+      if(!selectedCity){const grouped=new Map();for(const v of items){if(!grouped.has(v.city))grouped.set(v.city,[]);grouped.get(v.city).push(v)}for(const [name,list] of grouped){const lon=list.reduce((s,v)=>s+v.lon,0)/list.length,lat=list.reduce((s,v)=>s+v.lat,0)/list.length,[x,y]=p([lon,lat]),g=E("g",{class:"cluster",role:"button",tabindex:"0","aria-label":`${name}, ${list.length} listings`});g.append(E("circle",{class:"halo",cx:x,cy:y,r:16+list.length*1.5}),E("circle",{class:"core",cx:x,cy:y,r:6}));const c=E("text",{x,y:y+4,"text-anchor":"middle"});c.textContent=list.length;const l=E("text",{x,y:y-24,"text-anchor":"middle"});l.textContent=name;g.append(c,l);const choose=()=>{selectedCity=name;selectedVenue=null;render()};g.addEventListener("click",choose);g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" ")choose()});markersLayer.appendChild(g)}status.textContent=items.length?`${items.length} listings in ${grouped.size} cities - select a cluster`:"No listings match these filters"}
+      else{const list=items.filter(v=>v.city===selectedCity);for(const v of list){const [x,y]=p([v.lon,v.lat]),g=E("g",{class:`venue-marker${selectedVenue===v.id?" selected":""}`,role:"button",tabindex:"0","aria-label":v.name});g.append(E("circle",{cx:x,cy:y,r:9}));const l=E("text",{x:x+13,y:y+4});l.textContent=v.name;g.append(l);const choose=()=>showDetail(v);g.addEventListener("click",choose);g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" ")choose()});markersLayer.appendChild(g)}status.textContent=`${list.length} listing${list.length===1?"":"s"} in ${selectedCity}`}
+    }
+    const countryNames=[...new Set(venues.map(v=>v.country))].sort(), facilities=[...new Set(venues.flatMap(v=>v.features))].sort();for(const x of countryNames)country.add(new Option(x,x));for(const x of facilities)facility.add(new Option(x[0].toUpperCase()+x.slice(1),x));
+    $("stat-venues").textContent=venues.length;$("stat-cities").textContent=new Set(venues.map(v=>v.city)).size;$("stat-countries").textContent=countryNames.length;$("data-policy").textContent=`${data.meta.methodology} Last full pass: ${data.meta.checked}.`;
+    for(const c of [search,country,facility,openOnly,fresh])c.addEventListener("input",()=>{selectedVenue=null;render()});venueSelect.addEventListener("change",()=>{const v=venues.find(x=>x.id===venueSelect.value);if(v)showDetail(v)});back.addEventListener("click",()=>{selectedCity=selectedVenue=null;render()});$("reset").addEventListener("click",()=>{search.value="";country.value=facility.value="all";openOnly.checked=fresh.checked=false;selectedCity=selectedVenue=null;detail.className="detail empty";detail.innerHTML="<h2>Select a city or venue</h2><p>Choose a cluster on the map, use Quick select, or narrow the directory with filters.</p>";render()});render();
+  </script>
+</body>
+</html>
