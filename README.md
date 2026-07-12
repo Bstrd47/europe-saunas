@@ -22,6 +22,8 @@ The schedule uses Sunday-to-Saturday arrays. Each time window is `[startHour, en
 
 Each venue has a **Suggest correction** link to the public Google Form. The selected venue name, city and country are filled in automatically. The footer also links to the same form with **Suggest a missing venue** preselected. Submissions still require review before the public data is changed.
 
+Form responses flow into a private Google Sheet. Review them with the columns **Review status**, **Reviewer notes**, **Verified source**, **Decision date**, and **Published**. Never publish the response sheet itself because optional contact details may be present.
+
 ## Data policy
 
 - Prefer the venue's own website for hours, price, access policy and facilities.

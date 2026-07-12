@@ -9,7 +9,7 @@ Method: current venue websites were preferred. A listing is **verified** when it
 - 35 verified listings
 - 13 partial listings
 - 3 unresolved listings
-- 14 listings received material data corrections
+- 15 listings received material data corrections
 - All 51 records passed structural validation after the audit
 - Coordinates remain approximate address points. Exact entrance geocoding is a separate follow-up task.
 
@@ -29,13 +29,19 @@ Method: current venue websites were preferred. A listing is **verified** when it
 12. **The Brighton Sauna** — added GBP 20 day/weekend entry and the GBP 33 weekend pass. [Official prices](https://www.thebrightonsauna.com/prices-times/)
 13. **Nero's Sauna, Bury** — replaced the city-only address with Whitelegge Street, Bury BL8 1SW. [Official address](https://nerossauna.com/address/)
 14. **Sauna Bruc, Barcelona** — replaced an old EUR 10 shop offer with the current EUR 16.80 general price. [Official homepage](https://saunabruc.com/)
+15. **Sauna Macho, Brussels** — processed a community website correction and refreshed the listing from the current official homepage: weekday closing moved to 02:00, general admission changed from EUR 30 to EUR 25, EUR 19 and EUR 10 reductions were added, and the facilities list was expanded. [Official homepage](https://machosauna.be/)
+
+## Community-submission decisions
+
+1. **Sauna Macho — approved and published.** The submitted official website is current. It was already stored as the venue website, but its live hours, prices and facilities had changed, so the listing was refreshed.
+2. **Club 3000 — rejected as an active missing venue.** The submitted GayCities page marks it permanently closed, and Cinema Treasures reports that the associated venue closed on 11 December 2023. Closed venues are excluded from the active map. [Submitted source](https://brussels.gaycities.com/bathhouses/100627-club), [corroborating closure record](https://cinematreasures.org/theaters/25555)
 
 ## Venue-by-venue result
 
 | # | Venue | City | Result | Audit note |
 |---:|---|---|---|---|
 | 1 | BOILER | Berlin | Verified | Hours and EUR 26/29 prices confirmed on the official site. |
-| 2 | Sauna Macho | Brussels | Verified | Address, hours and EUR 25/30 prices confirmed. |
+| 2 | Sauna Macho | Brussels | Verified | Official homepage reconfirmed the website and supplied refreshed hours, EUR 25 general admission and EUR 19/10 reductions. |
 | 3 | Oasis Sauna | Brussels | Verified | Daily 11:30-22:00 and EUR 28/23 rates confirmed. |
 | 4 | Sun City | Paris | Verified | Hours, address and EUR 22/25 prices confirmed. |
 | 5 | IDM Sauna | Paris | Verified | Weekly hours and age/time-banded tariffs confirmed. |
