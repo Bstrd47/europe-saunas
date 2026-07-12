@@ -51,6 +51,7 @@
     <footer>
       <p><strong>Data policy:</strong> <span id="data-policy"></span></p>
       <p>Google Maps ratings are opened live instead of stored. This avoids stale copied ratings and keeps the prototype free.</p>
+      <p><a href="https://docs.google.com/forms/d/e/1FAIpQLSdbJSfCe54w3MOacVERNJMKA6OBpgL-zXrkbpHv7eRN79AF6Q/viewform?usp=pp_url&amp;entry.207993389=Suggest+a+missing+venue" target="_blank" rel="noopener">Suggest a missing venue</a></p>
     </footer>
   </main>
 
@@ -63,6 +64,7 @@
     const svg=$("map"), countriesLayer=svg.querySelector(".countries"), markersLayer=svg.querySelector(".markers");
     const search=$("search"), country=$("country"), facility=$("facility"), openOnly=$("open"), fresh=$("fresh"), venueSelect=$("venue"), detail=$("detail"), status=$("status"), back=$("back");
     const countries=feature(world,world.objects.features).features, dayIndex={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+    const correctionForm="https://docs.google.com/forms/d/e/1FAIpQLSdbJSfCe54w3MOacVERNJMKA6OBpgL-zXrkbpHv7eRN79AF6Q/viewform";
     let selectedCity=null, selectedVenue=null;
 
     function E(name,attrs={}){const n=document.createElementNS(NS,name);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);return n}
@@ -76,16 +78,15 @@
     function projection(items){if(selectedCity){const s=venues.filter(v=>v.city===selectedCity),lon=s.reduce((n,v)=>n+v.lon,0)/s.length,lat=s.reduce((n,v)=>n+v.lat,0)/s.length;return geoMercator().center([lon,lat]).scale(s.length>3?150000:115000).translate([450,270])}return geoMercator().center([8,51]).scale(650).translate([450,270])}
     function drawCountries(p,items){countriesLayer.replaceChildren();const path=geoPath(p),focus=new Set(items.map(v=>v.code));for(const f of countries)countriesLayer.appendChild(E("path",{d:path(f)||"",class:`country${focus.has(f.properties.id)?" focus":""}`}))}
     function mapsUrl(v){return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.name+" "+v.address)}`}
-    function correctionText(v){return `Correction for ${v.name}\nField to correct: \nSuggested value: \nSource URL: \nChecked on: `}
-    async function copyCorrection(v,button){try{await navigator.clipboard.writeText(correctionText(v));button.textContent="Correction template copied"}catch{prompt("Copy this correction template:",correctionText(v))}}
+    function correctionUrl(v){const u=new URL(correctionForm);u.searchParams.set("usp","pp_url");u.searchParams.set("entry.207993389","Correct an existing venue");u.searchParams.set("entry.2042164197",v.name);u.searchParams.set("entry.384631019",`${v.city}, ${v.country}`);return u.href}
     function showDetail(v){selectedVenue=v.id;selectedCity=v.city;const live=isOpen(v),liveLabel=live===null?"Schedule not structured":live?"Open now":"Closed now";detail.className="detail";detail.innerHTML=`
       <div class="detail-top"><div><p class="eyebrow">${esc(v.city)}, ${esc(v.country)}</p><h2>${esc(v.name)}</h2><p class="address">${esc(v.address)}</p></div><span class="state ${live===true?"on":""}">${esc(liveLabel)}</span></div>
       <dl><div><dt>Opening hours</dt><dd>${esc(v.hours)}</dd></div><div><dt>Typical admission</dt><dd>${esc(v.price)}</dd></div><div><dt>Access</dt><dd>${esc(v.audience)}</dd></div></dl>
       <div class="chips">${v.features.map(f=>`<span>${esc(f)}</span>`).join("")}</div>
       <p class="note">${esc(v.note)} Holiday hours can differ.</p>
       <p class="checked"><strong>Data audit:</strong> ${esc(v.auditStatus)} · checked ${esc(v.verifiedAt)} · coordinates remain an ${esc(v.coordinateStatus)}</p>
-      <div class="actions"><a class="primary" href="${esc(v.website)}" target="_blank" rel="noopener">Venue website</a><a href="${mapsUrl(v)}" target="_blank" rel="noopener">Google Maps & reviews</a><a href="${esc(v.source)}" target="_blank" rel="noopener">Fact source</a><button id="copy-correction" type="button">Suggest correction</button></div>`;
-      detail.querySelector("#copy-correction").addEventListener("click",e=>copyCorrection(v,e.currentTarget));render();
+      <div class="actions"><a class="primary" href="${esc(v.website)}" target="_blank" rel="noopener">Venue website</a><a href="${mapsUrl(v)}" target="_blank" rel="noopener">Google Maps & reviews</a><a href="${esc(v.source)}" target="_blank" rel="noopener">Fact source</a><a href="${correctionUrl(v)}" target="_blank" rel="noopener">Suggest correction</a></div>`;
+      render();
     }
     function render(){
       const items=filtered(), choice=selectedVenue||"";venueSelect.replaceChildren(new Option(items.length?"Choose a listing":"No matches",""));

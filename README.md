@@ -20,7 +20,7 @@ The schedule uses Sunday-to-Saturday arrays. Each time window is `[startHour, en
 
 ## Corrections workflow
 
-Each venue has a **Suggest correction** button. It copies a small correction template containing the venue name, changed field, replacement value and source URL. For a public version, add a project email address or link that button to a free GitHub issue form.
+Each venue has a **Suggest correction** link to the public Google Form. The selected venue name, city and country are filled in automatically. The footer also links to the same form with **Suggest a missing venue** preselected. Submissions still require review before the public data is changed.
 
 ## Data policy
 
